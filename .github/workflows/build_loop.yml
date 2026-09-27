@@ -226,6 +226,19 @@ jobs:
       - name: Sync clock
         run: sudo sntp -sS time.windows.com
 
+      # Build the OpenAI key for the carb entry screen's meal estimate into the app.
+      # Without the secret the build still succeeds and the feature stays hidden.
+      - name: Add OpenAI key
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -n "$OPENAI_API_KEY" ]; then
+            printf '\nOPENAI_API_KEY = %s\n' "$OPENAI_API_KEY" >> LoopConfigOverride.xcconfig
+            echo "OpenAI key added"
+          else
+            echo "::warning::OPENAI_API_KEY secret is not set; the meal estimate will be hidden"
+          fi
+
       # Build signed Loop IPA file
       - name: Fastlane Build & Archive
         run: bundle exec fastlane build_loop
