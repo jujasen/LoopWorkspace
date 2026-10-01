@@ -1,5 +1,5 @@
 {
-  "originHash" : "8ea6e3a03561298c71ae41233e1f296e560815044250ac4de43a3e5985502b43",
+  "originHash" : "7fda4c68a6a965c214af8666921216300ee21f56af23d8ec0294c1f0d988effe",
   "pins" : [
     {
       "identity" : "amplitude-ios",
@@ -103,10 +103,10 @@
     {
       "identity" : "nightscoutkit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/LoopKit/NightscoutKit",
+      "location" : "https://github.com/jujasen/NightscoutKit",
       "state" : {
-        "branch" : "main",
-        "revision" : "4ec9fd12a16b5d6c2de4f11870511361d42e1b7f"
+        "branch" : "loop-extra-settings",
+        "revision" : "64ef5ebef2484c09f793fc2c7ab97dd27d3b94fc"
       }
     },
     {
