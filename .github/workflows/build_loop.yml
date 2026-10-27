@@ -239,6 +239,19 @@ jobs:
             echo "::warning::OPENAI_API_KEY secret is not set; the meal estimate will be hidden"
           fi
 
+      # Build the Anthropic key into the app. With it, the AI features use Claude; without it
+      # they stay on OpenAI.
+      - name: Add Anthropic key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            printf '\nANTHROPIC_API_KEY = %s\n' "$ANTHROPIC_API_KEY" >> LoopConfigOverride.xcconfig
+            echo "Anthropic key added"
+          else
+            echo "::warning::ANTHROPIC_API_KEY secret is not set; the AI features use OpenAI"
+          fi
+
       # Build signed Loop IPA file
       - name: Fastlane Build & Archive
         run: bundle exec fastlane build_loop
