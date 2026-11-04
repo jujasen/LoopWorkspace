@@ -22,7 +22,7 @@ jobs:
   create_certs:
     name: Certificates
     needs: validate
-    runs-on: macos-26
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     outputs:
       new_certificate_needed: ${{ steps.set_output.outputs.new_certificate_needed }}
   
@@ -48,6 +48,7 @@ jobs:
 
       # Sync the GitHub runner clock with the Windows time server (workaround as suggested in https://github.com/actions/runner/issues/2996)
       - name: Sync clock
+        if: runner.environment == 'github-hosted'
         run: sudo sntp -sS time.windows.com
       
       # Create or update Distribution certificate and provisioning profiles
@@ -87,11 +88,19 @@ jobs:
           if [ "$FORCE_NUKE_CERTS" = "true" ]; then
             echo "::warning::‼️ Nuking of certificates was forced because the repository variable FORCE_NUKE_CERTS is set to 'true'."
           fi
+
+      # On a self-hosted Mac, fastlane's setup_ci leaves its temporary keychain as the default; give the login keychain back
+      - name: Restore login keychain
+        if: always() && runner.environment == 'self-hosted'
+        run: |
+          security default-keychain -s "$HOME/Library/Keychains/login.keychain-db"
+          security delete-keychain fastlane_tmp_keychain-db 2>/dev/null || true
+          security list-keychains -d user -s "$HOME/Library/Keychains/login.keychain-db"
   # Nuke Certs if needed, and if the repository variable ENABLE_NUKE_CERTS is set to 'true', or if FORCE_NUKE_CERTS is set to 'true', which will always force certs to be nuked
   nuke_certs:
       name: Nuke certificates
       needs: [validate, create_certs]
-      runs-on: macos-26
+      runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
       if: ${{ (needs.create_certs.outputs.new_certificate_needed == 'true' && vars.ENABLE_NUKE_CERTS == 'true') || vars.FORCE_NUKE_CERTS == 'true' }}
       steps:
         - name: Output from step id 'check_certs'
@@ -117,3 +126,11 @@ jobs:
             echo "::warning::⚠️ All Distribution certificates and TestFlight profiles have been revoked and recreated."
             echo "::warning::❗️ If you have other apps being distributed by GitHub Actions / Fastlane / TestFlight that does not renew certificates automatically, please run the '3. Create Certificates' workflow for each of these apps to allow these apps to be built."
             echo "::warning::✅ But don't worry about your existing TestFlight builds, they will keep working!"
+
+        # On a self-hosted Mac, fastlane's setup_ci leaves its temporary keychain as the default; give the login keychain back
+        - name: Restore login keychain
+          if: always() && runner.environment == 'self-hosted'
+          run: |
+            security default-keychain -s "$HOME/Library/Keychains/login.keychain-db"
+            security delete-keychain fastlane_tmp_keychain-db 2>/dev/null || true
+            security list-keychains -d user -s "$HOME/Library/Keychains/login.keychain-db"
